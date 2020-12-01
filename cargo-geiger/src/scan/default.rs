@@ -57,10 +57,9 @@ fn log_unsafe_functions(
         .map_err(|err| anyhow::Error::new(err))?;
     let mut writer = std::io::BufWriter::new(file);
 
-    for (_, report_entry) in report.packages.iter() {
+    for (package_id, report_entry) in report.packages.iter() {
         for name in &report_entry.unsafety.unsafe_functions {
-            // TODO: print package name
-            write!(&mut writer, "{}\n", name)?;
+            write!(&mut writer, "{} {}\n", package_id.name, name)?;
         }
     }
     Ok(())
