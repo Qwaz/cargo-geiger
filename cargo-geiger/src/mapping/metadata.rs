@@ -56,10 +56,10 @@ impl MatchesIgnoringSource for cargo_metadata::Dependency {
         krates: &Krates,
         package_id: cargo_metadata::PackageId,
     ) -> bool {
-        self.name
+        Some(&self.name)
             == krates
                 .get_package_name_from_cargo_metadata_package_id(&package_id)
-                .unwrap()
+                .as_ref()
             && self.req.matches(
                 &krates
                     .get_package_version_from_cargo_metadata_package_id(
