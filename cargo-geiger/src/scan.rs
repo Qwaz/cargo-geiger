@@ -105,6 +105,8 @@ pub fn unsafe_stats(
     let mut used = CounterBlock::default();
     let mut unused = CounterBlock::default();
 
+    let mut unsafe_functions = vec![];
+
     for (path_buf, rs_file_metrics_wrapper) in &pack_metrics.rs_path_to_metrics
     {
         let target = if rs_files_used.contains(path_buf) {
@@ -113,11 +115,15 @@ pub fn unsafe_stats(
             &mut unused
         };
         *target += rs_file_metrics_wrapper.metrics.counters.clone();
+        unsafe_functions.extend_from_slice(
+            &rs_file_metrics_wrapper.metrics.unsafe_function_names,
+        );
     }
     UnsafeInfo {
         used,
         unused,
         forbids_unsafe,
+        unsafe_functions,
     }
 }
 

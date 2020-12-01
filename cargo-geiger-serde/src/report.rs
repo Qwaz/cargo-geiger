@@ -84,6 +84,8 @@ pub struct UnsafeInfo {
     pub unused: CounterBlock,
     /// Whether this package forbids the use of `unsafe`
     pub forbids_unsafe: bool,
+    /// List of unsafe function names
+    pub unsafe_functions: Vec<String>,
 }
 
 /// Kind of dependency for a package

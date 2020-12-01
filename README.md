@@ -27,6 +27,19 @@ Or, build and statically link OpenSSL as part of the cargo-geiger executable:
 cargo install cargo-geiger --features vendored-openssl
 ```
 
+Install from Source
+-------------------
+
+Run the following command in the project directory:
+```
+cargo install --path cargo-geiger
+```
+
+This forked version enables the following command:
+```
+cargo geiger --json --unsafe-fn-log unsafe_fn_list.txt
+```
+
 Usage
 -----
 

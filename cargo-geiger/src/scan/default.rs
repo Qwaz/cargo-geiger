@@ -47,6 +47,25 @@ pub fn scan_unsafe(
     }
 }
 
+fn log_unsafe_functions(
+    log_path: impl AsRef<std::path::Path>,
+    report: &SafetyReport,
+) -> anyhow::Result<()> {
+    use std::io::Write;
+
+    let file = std::fs::File::create(log_path)
+        .map_err(|err| anyhow::Error::new(err))?;
+    let mut writer = std::io::BufWriter::new(file);
+
+    for (_, report_entry) in report.packages.iter() {
+        for name in &report_entry.unsafety.unsafe_functions {
+            // TODO: print package name
+            write!(&mut writer, "{}\n", name)?;
+        }
+    }
+    Ok(())
+}
+
 /// Based on code from cargo-bloat. It seems weird that CompileOptions can be
 /// constructed without providing all standard cargo options, TODO: Open an issue
 /// in cargo?
@@ -149,6 +168,9 @@ fn scan_to_report(
         OutputFormat::Json => serde_json::to_string(&report).unwrap(),
     };
     println!("{}", s);
+    if let Some(log_path) = &scan_parameters.args.unsafe_fn_log {
+        log_unsafe_functions(log_path, &report)?;
+    }
     Ok(())
 }
 

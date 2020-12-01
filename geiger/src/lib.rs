@@ -43,6 +43,9 @@ pub struct RsFileMetrics {
 
     /// This file is decorated with `#![forbid(unsafe_code)]`
     pub forbids_unsafe: bool,
+
+    /// Names of unsafe functions in this file
+    pub unsafe_function_names: Vec<String>,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -190,7 +193,10 @@ impl<'ast> visit::Visit<'ast> for GeigerSynVisitor {
             return;
         }
         if i.sig.unsafety.is_some() {
-            self.enter_unsafe_scope()
+            self.enter_unsafe_scope();
+            self.metrics
+                .unsafe_function_names
+                .push(i.sig.ident.to_string());
         }
         self.metrics
             .counters
@@ -198,7 +204,7 @@ impl<'ast> visit::Visit<'ast> for GeigerSynVisitor {
             .count(i.sig.unsafety.is_some());
         visit::visit_item_fn(self, i);
         if i.sig.unsafety.is_some() {
-            self.exit_unsafe_scope()
+            self.exit_unsafe_scope();
         }
     }
 

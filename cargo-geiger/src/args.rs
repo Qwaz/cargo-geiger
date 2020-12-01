@@ -21,6 +21,8 @@ OPTIONS:
         --all-targets             Return dependencies for all targets. By
                                   default only the host target is matched.
         --manifest-path <PATH>    Path to Cargo.toml.
+        --unsafe-fn-log <PATH>    Save unsafe function names to this log file.
+                                  Only works with `--json` option.
     -i, --invert                  Invert the tree direction.
         --no-indent               Display the dependencies as a list (rather
                                   than a tree).
@@ -72,6 +74,7 @@ pub struct Args {
     pub invert: bool,
     pub locked: bool,
     pub manifest_path: Option<PathBuf>,
+    pub unsafe_fn_log: Option<PathBuf>,
     pub no_indent: bool,
     pub offline: bool,
     pub package: Option<String>,
@@ -116,6 +119,7 @@ impl Args {
             invert: raw_args.contains(["-i", "--invert"]),
             locked: raw_args.contains("--locked"),
             manifest_path: raw_args.opt_value_from_str("--manifest-path")?,
+            unsafe_fn_log: raw_args.opt_value_from_str("--unsafe-fn-log")?,
             no_indent: raw_args.contains("--no-indent"),
             offline: raw_args.contains("--offline"),
             package: raw_args.opt_value_from_str("--manifest-path")?,

@@ -786,6 +786,7 @@ mod external {
                     ..Default::default()
                 },
                 forbids_unsafe: true,
+                unsafe_functions: vec![],
             },
         };
         let mut report = single_entry_safety_report(entry);
