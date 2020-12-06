@@ -105,7 +105,8 @@ pub fn unsafe_stats(
     let mut used = CounterBlock::default();
     let mut unused = CounterBlock::default();
 
-    let mut unsafe_functions = vec![];
+    let mut declared_unsafe_functions = Vec::new();
+    let mut contains_unsafe_functions = Vec::new();
 
     for (path_buf, rs_file_metrics_wrapper) in &pack_metrics.rs_path_to_metrics
     {
@@ -115,15 +116,19 @@ pub fn unsafe_stats(
             &mut unused
         };
         *target += rs_file_metrics_wrapper.metrics.counters.clone();
-        unsafe_functions.extend_from_slice(
-            &rs_file_metrics_wrapper.metrics.unsafe_function_names,
+        declared_unsafe_functions.extend_from_slice(
+            &rs_file_metrics_wrapper.metrics.declared_unsafe_functions,
         );
+        contains_unsafe_functions.extend_from_slice(
+            &rs_file_metrics_wrapper.metrics.contains_unsafe_functions,
+        )
     }
     UnsafeInfo {
         used,
         unused,
         forbids_unsafe,
-        unsafe_functions,
+        declared_unsafe_functions,
+        contains_unsafe_functions,
     }
 }
 

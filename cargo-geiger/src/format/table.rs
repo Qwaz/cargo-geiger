@@ -253,7 +253,8 @@ mod table_tests {
             metrics: RsFileMetrics {
                 counters: create_counter_block(),
                 forbids_unsafe,
-                unsafe_function_names: vec![],
+                declared_unsafe_functions: Vec::new(),
+                contains_unsafe_functions: Vec::new(),
             },
             is_crate_entry_point,
         }

@@ -47,21 +47,49 @@ pub fn scan_unsafe(
     }
 }
 
+fn suffixed_file_name(
+    path: impl AsRef<std::path::Path>,
+    suffix: impl AsRef<std::ffi::OsStr>,
+) -> std::ffi::OsString {
+    let path = path.as_ref();
+    let suffix = suffix.as_ref();
+
+    let stem = path.file_stem().unwrap();
+    let ext = path.extension().unwrap_or_default();
+
+    let mut new_file_name = std::ffi::OsString::new();
+    new_file_name.push(stem);
+    new_file_name.push(suffix);
+    new_file_name.push(ext);
+
+    new_file_name
+}
+
 fn log_unsafe_functions(
     log_path: impl AsRef<std::path::Path>,
     report: &SafetyReport,
 ) -> anyhow::Result<()> {
     use std::io::Write;
 
-    let file = std::fs::File::create(log_path)
-        .map_err(|err| anyhow::Error::new(err))?;
-    let mut writer = std::io::BufWriter::new(file);
+    let log_path = log_path.as_ref();
+
+    let declared_log =
+        std::fs::File::create(suffixed_file_name(log_path, ".declared"))?;
+    let mut declared_writer = std::io::BufWriter::new(declared_log);
+
+    let contains_log =
+        std::fs::File::create(suffixed_file_name(log_path, ".contains"))?;
+    let mut contains_writer = std::io::BufWriter::new(contains_log);
 
     for (package_id, report_entry) in report.packages.iter() {
-        for name in &report_entry.unsafety.unsafe_functions {
-            write!(&mut writer, "{} {}\n", package_id.name, name)?;
+        for name in &report_entry.unsafety.declared_unsafe_functions {
+            write!(&mut declared_writer, "{} {}\n", package_id.name, name)?;
+        }
+        for name in &report_entry.unsafety.contains_unsafe_functions {
+            write!(&mut contains_writer, "{} {}\n", package_id.name, name)?;
         }
     }
+
     Ok(())
 }
 

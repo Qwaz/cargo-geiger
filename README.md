@@ -37,8 +37,10 @@ cargo install --path cargo-geiger
 
 This forked version enables the following command:
 ```
-cargo geiger --json --unsafe-fn-log unsafe_fn_list.txt
+cargo geiger --json --unsafe-fn-log unsafe_fn_list
 ```
+
+This command will generate a list of functions that is declared as unsafe function in `unsafe_fn_list.declared` and a list of functions that are safe but contain unsafe expressions in `unsafe_fn_list.contains`.
 
 Usage
 -----

@@ -44,14 +44,23 @@ pub struct RsFileMetrics {
     /// This file is decorated with `#![forbid(unsafe_code)]`
     pub forbids_unsafe: bool,
 
-    /// Names of unsafe functions in this file
-    pub unsafe_function_names: Vec<String>,
+    /// Names of unsafe functions
+    pub declared_unsafe_functions: Vec<String>,
+
+    /// Names of safe functions that contains unsafe blocks
+    pub contains_unsafe_functions: Vec<String>,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum IncludeTests {
     Yes,
     No,
+}
+
+struct FunctionStat {
+    name: String,
+    declaration_is_unsafe: bool,
+    contains_unsafe_block: bool,
 }
 
 struct GeigerSynVisitor {
@@ -69,6 +78,9 @@ struct GeigerSynVisitor {
     /// This is needed since unsafe scopes can be nested and we need to know
     /// when we leave the outmost unsafe scope and get back into a safe scope.
     unsafe_scopes: u32,
+
+    /// Currently visiting functions
+    function_stack: Vec<FunctionStat>,
 }
 
 impl GeigerSynVisitor {
@@ -77,6 +89,7 @@ impl GeigerSynVisitor {
             include_tests,
             metrics: Default::default(),
             unsafe_scopes: 0,
+            function_stack: Vec::new(),
         }
     }
 
@@ -192,11 +205,16 @@ impl<'ast> visit::Visit<'ast> for GeigerSynVisitor {
         if IncludeTests::No == self.include_tests && is_test_fn(i) {
             return;
         }
+
+        // Push current function stat to the function
+        self.function_stack.push(FunctionStat {
+            name: i.sig.ident.to_string(),
+            declaration_is_unsafe: i.sig.unsafety.is_some(),
+            contains_unsafe_block: false,
+        });
+
         if i.sig.unsafety.is_some() {
             self.enter_unsafe_scope();
-            self.metrics
-                .unsafe_function_names
-                .push(i.sig.ident.to_string());
         }
         self.metrics
             .counters
@@ -206,12 +224,24 @@ impl<'ast> visit::Visit<'ast> for GeigerSynVisitor {
         if i.sig.unsafety.is_some() {
             self.exit_unsafe_scope();
         }
+
+        // Pop the stat and add it to the metric
+        let stat = self.function_stack.pop().unwrap();
+        if stat.declaration_is_unsafe {
+            self.metrics.declared_unsafe_functions.push(stat.name);
+        } else if stat.contains_unsafe_block {
+            self.metrics.contains_unsafe_functions.push(stat.name);
+        }
     }
 
     fn visit_expr(&mut self, i: &Expr) {
         // Total number of expressions of any type
         match i {
             Expr::Unsafe(i) => {
+                if let Some(stat) = self.function_stack.last_mut() {
+                    stat.contains_unsafe_block = true;
+                }
+
                 self.enter_unsafe_scope();
                 visit::visit_expr_unsafe(self, i);
                 self.exit_unsafe_scope();
